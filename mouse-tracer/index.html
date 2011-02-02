@@ -139,8 +139,13 @@ $(function() {
 					
 					if (previous) {
 						ctx.beginPath();
-						ctx.lineWidth = 1;
+						ctx.lineWidth = Math.ceil(dot.life / 5);
+						ctx.lineCap = 'round';
+						ctx.lineJoin = 'round';
 						ctx.strokeStyle = style;
+						ctx.shadowBlur = Math.ceil(dot.lift / 3);
+						ctx.shadowColor = 'rgba(' + dot.r + ',' + dot.g + ',' + dot.b + ','
+							+ alpha * 0.7 + ')';
 						ctx.moveTo(previous.x, previous.y);
 						ctx.lineTo(dot.x, dot.y);
 						ctx.stroke();
