@@ -215,16 +215,20 @@ $(function() {
 			var bubbles = new Bubbles();
 			var dots = new Dots();
 			var $stats = $('#stats');
-			this.data('bubbles', bubbles);
-			this.data('dots', dots);
-			this.layers('status', {
+			
+			this.data('bubbles', bubbles)
+			.data('dots', dots)
+			.layers('status', {
 				left: 5,
 				top: 5,
 				playable: false,
+				data: {stats: $stats},
 				attachment: $stats.detach()[0]
+			}, {
+				beforerender: function(e) {
+					_updateStats(this.data('stats'), e.stats, e.hasFocus);
+				}
 			});
-			
-			this.data('stats', $stats);
 		},
 		beforerender: function(e) {
 			var bubbles = this.data('bubbles');
@@ -245,7 +249,6 @@ $(function() {
 			}
 			
 			e.clearHistory();
-			_updateStats(this.data('stats'), e.stats, e.hasFocus);
 		},
 		render: function(e) {
 			var ctx = e.context;
