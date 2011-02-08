@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Shape Breaker - gin samples</title>
+<style type="text/css">
+html {
+ height: 100%;
+}
+
+body {
+ overflow: hidden;
+ margin: 0;
+ height: 100%;
+ background-color: #000000;
+ font-family: Arial,sans-serif;
+}
+
+#wrapper {
+ display: inline-block;
+ margin: 20px 0 0;
+}
+
+#gadgets {
+ display: none;
+}
+
+#stats_panel {
+ position: absolute;
+ z-index: 100;
+ background-color: rgba(255, 255, 255, 0.2);
+ border: 2px solid #999999;
+ width: 170px;
+ -moz-border-radius: 8px;
+ border-radius: 8px;
+}
+
+#stats_panel, #stats_panel li {
+ margin: 0;
+ padding: 0;
+}
+
+#stats_panel li {
+ list-style: none;
+ color: #FFFFFF;
+}
+
+#stats_panel li span {
+ margin: 2px;
+ font-size: 12px;
+}
+
+#stats_panel li span:first-child {
+ display: inline-block;
+ width: 90px;
+ padding-left: 5px,
+ display: inline-block;
+}
+
+#fps, #mps, #status, #mouseX, #mouseY {
+ font-weight: bold;
+}
+
+#score_panel, #life_panel {
+ color: #FFFFFF;
+ font-weight: bold;
+ font-size: 32px;
+}
+
+#score, #life {
+ margin-left: 20px;
+}
+
+#menu_panel {
+ color: #FFFFFF;
+ width: 800px;
+ height: 400px;
+ text-align: center;
+}
+
+#menu_panel p {
+ margin: 0;
+}
+
+#menu_panel .title {
+ padding: 50px 0 10px;
+ font-size: 82px;
+}
+
+#menu_panel .version {
+ font-size: 12px;
+ color: #999999;
+}
+
+#menu_panel .highscore {
+ padding: 20px 0;
+ font-size: 24px;
+}
+
+#highscore {
+ padding-left: 20px;
+}
+
+.menu_item {
+ font-size: 32px;
+ font-weight: bold;
+}
+
+#menu_panel .menu_item {
+ margin: 0;
+ padding: 0;
+}
+
+#menu_panel .menu_item li {
+ margin: 0;
+ padding: 50px 0;
+ list-style: none;
+ display: inline-block;
+ width: 200px;
+}
+
+#about_panel {
+ color: #CCCCCC;
+ font-size: 18px;
+}
+
+#about_panel a {
+ color: #FFFFFF;
+}
+
+#about_panel a:hover {
+ text-decoration: none;
+}
+
+#hint_panel {
+ color: #999999;
+ font-size: 16px;
+ text-align: center;
+}
+
+#help_panel {
+ color: #FFFFFF;
+ font-size: 14px;
+ padding: 20px;
+}
+
+#help_panel h1 {
+ font-size: 24px;
+ font-weight: bold;
+ margin: 0;
+ padding: 0;
+ color: #CCCCCC;
+ border-bottom: 2px solid #999999;
+}
+
+#help_panel table tr td {
+ margin: 0;
+ padding: 0 0 0 125px;
+ width: 275px;
+ height: 100px;
+ line-height: 130%;
+}
+
+#help_panel table tr {
+}
+
+#help_panel p {
+ font-size: 16px;
+ margin: 0;
+ padding: 5px 10px;
+}
+
+#help_panel strong {
+ color: #FFFF00;
+}
+
+#help_panel table {
+ margin: 10px 0 0;
+}
+
+#help_panel .menu_item {
+ position: absolute;
+ text-align: right;
+ top: 290px;
+ left: 600px;
+}
+</style>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript" src="gin.js"></script>
+<script type="text/javascript" src="game.js"></script>
+</head>
+<body id="device">
+<div id="gadgets">
+<ul id="stats_panel">
+	<li><span>FPS</span><span id="fps">-</span></li>
+	<li><span>Mouse Move/s</span><span id="mps">-</span></li>
+	<li><span>Mouse Position</span>(<span id="mouseX">-</span>,<span id="mouseY">-</span>)</li>
+	<li><span>Demo Status</span><span id="status">-</span></li>
+</ul>
+<div id="score_panel">
+Score:<span id="score">0</span>
+</div>
+<div id="life_panel">
+Life:<span id="life">5</span>
+</div>
+<div id="menu_panel">
+	<p class="title">Shape Breaker</p>
+	<p class="version">ver 1.0.0</p>
+	<p class="highscore">History High Score:<span id="highscore">0</span></p>
+	<ul class="menu_item">
+		<li>Play</li>
+		<li>Help</li>
+	</ul>
+</div>
+<div id="about_panel">
+An <a href="https://github.com/huandu/gin-samples">open source</a> game powered by <a href="https://github.com/huandu/gin" target="_blank">gin</a> (<a href="http://twitter.com/huandu">feedback</a>, <a href="#clear-high-score" onclick="_resetHighScore(); return false;">reset highscore</a>)
+</div>
+<div id="hint_panel">
+Hold mouse button and slice the triangle above to play
+</div>
+<div id="help_panel">
+<h1>Shape Breaker - How to Play</h1>
+<p>The goal of this game is to break as many polygons as you can with your mouse. <strong>Don't miss any polygon</strong> and <strong>don't touch any circle</strong>. Otherwise you will lose 1 life - you have <strong>only 5 lives</strong> at most!</p>
+<table border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td>It's the triangle, the basic polygon. You will see random fragments when it's broken.</td>
+<td>It's the quadrangle. When it's broken, it will <strong>create 2 triangles</strong> in <strong>different direction</strong>. Choose a wise time to break it. You can see polygons with even more edges if you stay long enough. And, you know, they're much tougher.</td>
+</tr>
+<td>It's the triangle with a death circle flag. The triangle itself is not dangerous. Just break it. But after it's broken, a circle will be created. Don't touch it!</td>
+<td></td>
+<tr>
+</tr>
+<td>It's the circle, also a death bomb. This is the only shape you <strong>should never touch</strong>. You will lose 1 life if you do so.</td>
+<td></td>
+<tr>
+</tr>
+</table>
+<div class="menu_item">Back</div>
+</div>
+</div>
+</body>
+</html>
