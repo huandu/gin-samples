@@ -1213,8 +1213,11 @@ $(function() {
 	});
 });
 
-var localStorage = window.localStorage || {},
-    _setHighScore = function(score) {
+if (!window.localStorage) {
+    localStorage = {};
+}
+
+var _setHighScore = function(score) {
         if (!localStorage.shapeBreakerHighscore || localStorage.shapeBreakerHighscore < score) {
             localStorage.shapeBreakerHighscore = score;
         }
