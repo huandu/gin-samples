@@ -1,3 +1,11 @@
 ﻿Samples using "gin":https://github.com/huandu/gin
 
 Welcome to send me feedback in github or "@huandu":http://twitter.com/huandu on twitter.
+
+h2. How to play these samples
+
+Steps
+* Fetch this project to your local directory
+* Fetch "gin":https://github.com/huandu/gin too
+* Copy gin.js in "gin":https://github.com/huandu/gin to dir of the sample you want to play with, e.g. copy it to mouse-tracer/ then the mouse-tracer is playable
+* Open index.html in sample dir with modern browser
