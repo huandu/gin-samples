@@ -59,6 +59,17 @@ body {
 <script type="text/javascript" src="gin.js"></script>
 <script type="text/javascript">
 $(function() {
+    function mixColor(fgColor, bgColor, alpha) {
+        return (0?
+            'rgb(' + (fgColor.r * alpha + bgColor.r * (1 - alpha)) + ','
+            + (fgColor.g * alpha + bgColor.g * (1 - alpha)) + ','
+            + (fgColor.b * alpha + bgColor.b * (1 - alpha)) + ')':
+            'rgba(' + fgColor.r + ',' + fgColor.g + ',' + fgColor.b + ',' + alpha + ')'
+        );
+    }
+    
+    var backgroundColor = {r: 0, g: 0, b: 0};
+    
     function Bubbles() {}
     Bubbles.prototype = {
         bubbles: [],
@@ -69,13 +80,13 @@ $(function() {
                 var alpha = Math.min(.4, bubble.life * 0.01);
                 
                 if (alpha >= 0.1) {
-                    var style = 'rgba(' + bubble.r + ',' + bubble.g + ',' + bubble.b + ','
-                        + alpha + ')';
+                    var style = mixColor(bubble, backgroundColor, alpha);
                     
                     ctx.beginPath();
                     ctx.strokeStyle = style;
                     ctx.lineWidth = bubble.w;
                     ctx.arc(bubble.x, bubble.y, (bubble.radius += bubble.step), 0, Math.PI * 2, true);
+                    //ctx.rect(bubble.x - bubble.radius, bubble.y - bubble.radius, 2*bubble.radius, 2*bubble.radius);
                     ctx.stroke();
                 }
                 
@@ -135,8 +146,7 @@ $(function() {
                 var alpha = Math.min(1, dot.life * 0.04);
                 
                 if (alpha >= 0.1) {
-                    var style = 'rgba(' + dot.r + ',' + dot.g + ',' + dot.b + ','
-                        + alpha + ')';
+                    var style = mixColor(dot, backgroundColor, alpha);
                     
                     if (previous) {
                         ctx.beginPath();
@@ -145,8 +155,7 @@ $(function() {
                         ctx.lineJoin = 'round';
                         ctx.strokeStyle = style;
                         ctx.shadowBlur = Math.ceil(dot.life / 3);
-                        ctx.shadowColor = 'rgba(' + dot.r + ',' + dot.g + ',' + dot.b + ','
-                            + alpha * 0.7 + ')';
+                        ctx.shadowColor = mixColor(dot, backgroundColor, alpha * 0.7);
                         ctx.moveTo(previous.x, previous.y);
                         ctx.lineTo(dot.x, dot.y);
                         ctx.stroke();
@@ -156,11 +165,13 @@ $(function() {
                     if (dot.solid) {
                         ctx.fillStyle = style;
                         ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2, true);
+                        //ctx.rect(dot.x - dot.radius, dot.y - dot.radius, 2*dot.radius, 2*dot.radius);
                         ctx.fill();
                     } else {
                         ctx.strokeStyle = style;
                         ctx.lineWidth = 1;
                         ctx.arc(dot.x, dot.y, dot.radius + 2, 0, Math.PI * 2, true);
+                        //ctx.rect(dot.x - dot.radius - 2, dot.y - dot.radius - 2, 2*(dot.radius + 2), 2*(dot.radius + 2));
                         ctx.stroke();
                     }
                 }
@@ -179,7 +190,8 @@ $(function() {
         }
     };
 
-    var MOUSE_LBUTTON = 0;
+    // note: value is defined in http://www.w3.org/TR/DOM-Level-3-Events/#events-MouseEvent-buttons
+    var MOUSE_LBUTTON = 1;
     var MOUSE_RBUTTON = 2;
     
     var STATUS_STOPPED = 0;
@@ -194,16 +206,20 @@ $(function() {
         mps: 0,
         status: STATUS_STOPPED
     };
+    var hasFocus = true;
     
-    var _updateStats = function($stats, s, hasFocus) {
-        if (s.fps != stats.fps) {
-            $('#fps', $stats).text(s.fps);
-            stats.fps = s.fps;
+    var _updateStats = function($stats, s) {
+        var fps = s('fps'),
+            mps = s('mps');
+        
+        if (fps != stats.fps) {
+            $('#fps', $stats).text(fps);
+            stats.fps = fps;
         }
         
-        if (s.mps != stats.mps) {
-            $('#mps', $stats).text(s.mps);
-            stats.mps = s.mps;
+        if (mps != stats.mps) {
+            $('#mps', $stats).text(mps);
+            stats.mps = mps;
         }
         
         var status = hasFocus? STATUS_RUNNING: STATUS_LOST_FOCUS;
@@ -224,7 +240,7 @@ $(function() {
             
             this.data('bubbles', bubbles)
             .data('dots', dots)
-            .layers('status', {
+            .layer('status', {
                 left: 5,
                 top: 5,
                 playable: false,
@@ -240,21 +256,17 @@ $(function() {
             var bubbles = this.data('bubbles');
             var dots = this.data('dots');
             
-            if (e.mouseover && e.hasFocus) {
-                e.traverseHistory(function(history) {
-                    bubbles.create(history.clientX, history.clientY);
-                    
-                    if (e.buttonStates[MOUSE_LBUTTON]) {
-                        dots.create(history.clientX, history.clientY, true);
-                    }
-                    
-                    if (e.buttonStates[MOUSE_RBUTTON]) {
-                        dots.create(history.clientX, history.clientY);
-                    }
-                });
-            }
-            
-            e.clearHistory();
+            e.history.each(function(history) {
+                bubbles.create(history.clientX, history.clientY);
+                
+                if (e.buttons & MOUSE_LBUTTON) {
+                    dots.create(history.clientX, history.clientY, true);
+                }
+                
+                if (e.buttons & MOUSE_RBUTTON) {
+                    dots.create(history.clientX, history.clientY);
+                }
+            });
         },
         render: function(e) {
             var ctx = e.context;
@@ -267,8 +279,15 @@ $(function() {
                 dots.render(ctx);
             }
         },
+        ginfocus: function() {
+            hasFocus = true;
+        },
+        ginblur: function() {
+            hasFocus = false;
+        }
     });
 });
+
 </script>
 </head>
 <body id="device">

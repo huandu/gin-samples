@@ -1,5 +1,5 @@
 $(function() {
-	var MOUSE_LBUTTON = 0;
+	var MOUSE_LBUTTON = 1;
 	var MOUSE_RBUTTON = 2;
 	
 	var STATUS_STOPPED = 0;
@@ -41,21 +41,24 @@ $(function() {
 		mps: 0,
 		status: STATUS_STOPPED
 	};
+    var hasFocus = true;
 	
 	var _updateStats = function(e) {
 		var s = e.stats;
+        var fps = s('fps');
+        var mps = s('mps');
 		
-		if (s.fps != stats.fps) {
-			$('#fps').text(s.fps);
-			stats.fps = s.fps;
+		if (fps != stats.fps) {
+			$('#fps').text(fps);
+			stats.fps = fps;
 		}
 		
-		if (s.mps != stats.mps) {
-			$('#mps').text(s.mps);
-			stats.mps = s.mps;
+		if (mps != stats.mps) {
+			$('#mps').text(mps);
+			stats.mps = mps;
 		}
 		
-		var status = e.hasFocus? STATUS_RUNNING: STATUS_LOST_FOCUS;
+		var status = hasFocus? STATUS_RUNNING: STATUS_LOST_FOCUS;
 		
 		if (stats.status != status) {
 			$('#status').text(statusMsg[status]);
@@ -134,6 +137,7 @@ $(function() {
 					ctx.moveTo(previous.x, previous.y);
 					ctx.lineTo(dot.x, dot.y);
 					ctx.stroke();
+                    
 				}
 				
 				previous = {
@@ -813,13 +817,13 @@ $(function() {
                 $hint_panel = $('#hint_panel').detach(),
                 $help_panel = $('#help_panel').detach();
 			
-			this.layers('background', {
+			this.layer('background', {
 				left: Math.max((this.core().width() - GAME_CANVAS_WIDTH) / 2 - GAME_CANVAS_BORDER, 0),
 				top: 40,
 				width: GAME_CANVAS_WIDTH + 2 * GAME_CANVAS_BORDER,
 				height: GAME_CANVAS_HEIGHT + 2 * GAME_CANVAS_BORDER
 			}, {
-				play: function() {
+				start: function() {
 					this.draw(function(e) {
 						var ctx = e.context;
 						ctx.fillStyle = 'rgb(32,32,32)';
@@ -828,7 +832,7 @@ $(function() {
 						ctx.clearRect(GAME_CANVAS_BORDER, GAME_CANVAS_BORDER,
 							this.width() - 2 * GAME_CANVAS_BORDER, this.height() - 2 * GAME_CANVAS_BORDER);
 					})
-					.layers('main', {
+					.layer('main', {
 						left: GAME_CANVAS_BORDER,
 						top: GAME_CANVAS_BORDER,
 						width: GAME_CANVAS_WIDTH,
@@ -836,6 +840,18 @@ $(function() {
 						hidden: true,
 						autoPlay: false
 					}, {
+                        start: function() {
+							this.layer('score', {
+								left: GAME_CANVAS_BORDER + 5,
+								top: GAME_CANVAS_BORDER + 5,
+								attachment: $score_panel[0]
+							})
+							.layer('life', {
+								left: GAME_CANVAS_BORDER + GAME_CANVAS_WIDTH - 130,
+								top: GAME_CANVAS_BORDER + 5,
+								attachment: $life_panel[0]
+							});
+                        },
 						play: function() {
 							this.data('shape_manager', ShapeManager.create(this))
 							.data('mouse_tracer', MouseTracer.create())
@@ -848,16 +864,6 @@ $(function() {
 								if (cur != prev) {
 									$('#life').text(cur);
 								}
-							})
-							.layers('score', {
-								left: GAME_CANVAS_BORDER + 5,
-								top: GAME_CANVAS_BORDER + 5,
-								attachment: $score_panel[0]
-							})
-							.layers('life', {
-								left: GAME_CANVAS_BORDER + GAME_CANVAS_WIDTH - 130,
-								top: GAME_CANVAS_BORDER + 5,
-								attachment: $life_panel[0]
 							});
 						},
                         stop: function() {
@@ -869,19 +875,20 @@ $(function() {
                                     e.context.clearRect(0, 0, this.width(), this.height());
                                 });
                             });
-                            $(this.parent().layers('menu').play().element()).fadeIn(GAME_FADE_DURANCE);
+                            $(this.parent().layer('menu').play().element()).fadeIn(GAME_FADE_DURANCE);
                         },
 						beforerender: function(e) {
 							var tracer = this.data('mouse_tracer'),
 								manager = this.data('shape_manager'),
 								hits = 0;
 
-							if (e.buttonStates[MOUSE_LBUTTON]) {
-								e.traverseHistory(function(cur, prev) {
+							if (e.buttons & MOUSE_LBUTTON) {
+								e.history.each(function(cur, prev) {
 									tracer.add(cur);
 								});
 							} else {
 								tracer.reset();
+                                e.history.clear();
 							}
 							
 							tracer.traverse(this, function(cur, prev) {
@@ -899,13 +906,41 @@ $(function() {
 							this.data('mouse_tracer').render(e);
 						}
 					})
-					.layers('menu', {
+					.layer('menu', {
 						left: GAME_CANVAS_BORDER,
 						top: GAME_CANVAS_BORDER,
                         width: GAME_CANVAS_WIDTH,
                         height: GAME_CANVAS_HEIGHT,
 						attachment: $menu_panel[0]
 					}, {
+                        start: function() {
+							this.layer('about', {
+								left: 0,
+								top: -40,
+								dialogMode: true,
+								attachment: $about_panel[0]
+							})
+                            .layer('hint', {
+                                left: 0,
+                                top: 380,
+                                width: this.width(),
+                                height: 20,
+                                attachment: $hint_panel[0]
+                            }, {
+                                play: function() {
+                                    var self = this;
+                                    $hint_panel.fadeOut(GAME_FADE_DURANCE, function() {
+                                        self.stop();
+                                    });
+                                },
+                                stop: function() {
+                                    var self = this;
+                                    $hint_panel.fadeIn(GAME_FADE_DURANCE, function() {
+                                        self.play();
+                                    });
+                                }
+                            });
+                        },
 						play: function() {
 							$('#highscore').text(_getHighScore());
 							
@@ -949,33 +984,7 @@ $(function() {
                                 hasDeathBomb: false
                             }))
                             .data('hiding', false)
-                            .data('switchTo', null)
-							.layers('about', {
-								left: 0,
-								top: -40,
-								dialogMode: true,
-								attachment: $about_panel[0]
-							})
-                            .layers('hint', {
-                                left: 0,
-                                top: 380,
-                                width: this.width(),
-                                height: 20,
-                                attachment: $hint_panel[0]
-                            }, {
-                                play: function() {
-                                    var self = this;
-                                    $hint_panel.fadeOut(GAME_FADE_DURANCE, function() {
-                                        self.stop();
-                                    });
-                                },
-                                stop: function() {
-                                    var self = this;
-                                    $hint_panel.fadeIn(GAME_FADE_DURANCE, function() {
-                                        self.play();
-                                    });
-                                }
-                            });
+                            .data('switchTo', null);
 						},
                         stop: function() {
                             if (this.data('switchTo')) {
@@ -984,7 +993,7 @@ $(function() {
                                 });
                             
                                 this.hide()
-                                .parent().layers(this.data('switchTo'))
+                                .parent().layer(this.data('switchTo'))
                                 .play().show();
                             }
                         },
@@ -995,12 +1004,13 @@ $(function() {
                                 play = this.data('triangle_play'),
                                 help = this.data('triangle_help');
 
-							if (e.buttonStates[MOUSE_LBUTTON] || e.buttonStates[MOUSE_RBUTTON]) {
-								e.traverseHistory(function(cur, prev) {
+							if (e.buttons & MOUSE_LBUTTON || e.buttons & MOUSE_RBUTTON) {
+								e.history.each(function(cur, prev) {
 									tracer.add(cur);
 								});
 							} else {
 								tracer.reset();
+                                e.history.clear();
 							}
 							
                             if (!this.data('hiding')) {
@@ -1037,7 +1047,7 @@ $(function() {
 							this.data('mouse_tracer').render(e);
                         }
 					})
-                    .layers('help', {
+                    .layer('help', {
  						left: GAME_CANVAS_BORDER,
 						top: GAME_CANVAS_BORDER,
                         width: GAME_CANVAS_WIDTH,
@@ -1149,7 +1159,7 @@ $(function() {
                             });
                             
                             this.hide()
-                            .parent().layers('menu')
+                            .parent().layer('menu')
                             .play().show();
                         },
                         beforerender: function(e) {
@@ -1157,12 +1167,13 @@ $(function() {
                                 tracer = this.data('mouse_tracer'),
                                 back = this.data('triangle_back');
 
-							if (e.buttonStates[MOUSE_LBUTTON] || e.buttonStates[MOUSE_RBUTTON]) {
-								e.traverseHistory(function(cur, prev) {
+							if (e.buttons & MOUSE_LBUTTON || e.buttons & MOUSE_RBUTTON) {
+								e.history.each(function(cur, prev) {
 									tracer.add(cur);
 								});
 							} else {
 								tracer.reset();
+                                e.history.clear();
 							}
 							
                             if (!this.data('hiding')) {
@@ -1200,16 +1211,20 @@ $(function() {
 					this.left(Math.max((s.width - GAME_CANVAS_WIDTH) / 2 - GAME_CANVAS_BORDER, 0));
 				}
 			})
-			.layers('status', {
+			.layer('status', {
 				left: 5,
 				top: 5,
 				playable: false,
 				attachment: $stats_panel[0]
 			});
 		},
-		beforerender: function(e) {
-			e.clearHistory();
-		}
+        ginblur: function() {
+            console.log('blur');
+            hasFocus = false;
+        },
+        ginfocus: function() {
+            hasFocus = true;
+        }
 	});
 });
 

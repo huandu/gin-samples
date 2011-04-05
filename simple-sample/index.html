@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <title>Simple sample - gin samples</title>
-<script type="text/javascript" src="gin.js"></script>
 </head>
 <body>
 <div id="device"></div>
+<script type="text/javascript" src="gin.js"></script>
+<!--script type="text/javascript" src="../3rd-party/webgl-2d.js"></script-->
 <script type="text/javascript">
 $G('device', {
     width: 200,
@@ -26,6 +27,7 @@ $G('device', {
             colorDelta = this.data('colorDelta'),
             r = rad * Math.PI;
         
+        ctx.save();
         ctx.clearRect(0, 0, this.width(), this.height());
         ctx.beginPath();
         ctx.lineWidth = 20;
@@ -34,6 +36,7 @@ $G('device', {
         ctx.lineTo(100 + Math.cos(r) * 80, 100 + Math.sin(r) * 80);
         ctx.arc(100, 100, 80, r, r + 5/3 * Math.PI, false);
         ctx.stroke();
+        ctx.restore();
         
         color += colorDelta;
         rad += radDelta;
@@ -42,7 +45,30 @@ $G('device', {
         .data('color', color)
         .data('colorDelta', color >= 200 || color <= 0? -colorDelta: colorDelta);
     }
+})
+// use webgl-2d to boost performance
+.extend({
+    getContext: function(canvas) {
+        //if (!canvas.$getContext) {
+        //    console.log('enable webgl 2d');
+        //    WebGL2D.enable(canvas);
+        //}
+        //
+        //var gl = canvas.getContext('webgl-2d');
+        ////console.log(gl);
+        //
+        //if (!gl) {
+        //    console.log('cannot get webgl-2d');
+        //    throw new Error('cannot get webgl-2d');
+        //}
+        //
+        ////return canvas.getContext('webgl-2d');
+        //return gl;
+        
+        return canvas.getContext('2d');
+    }
 });
+
 </script>
 </body>
 </html>
