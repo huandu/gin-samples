@@ -54,10 +54,14 @@ $G('device', {
           if (e.keyState[keyCode]) {
             ctx.fillRect(i*blockWidth, this.width() - keyLightHeight, blockWidth, keyLightHeight);
           }
-	}
-	var str = JSON.stringify(e.keyState);
-	if (str != '{}')
-	console.log(JSON.stringify(e.keyState));
+        }
+
+        if (console) {
+          var str = JSON.stringify(e.keyState);
+          if (str != '{}')
+          console.log(JSON.stringify(e.keyState));
+        }
+
         for (var i=0; i<notesHeight.length; i++) {
           height = notesHeight[i] + deltaHeight;
           if (height > 0 && height + singleNoteHeight <= this.height()) {
