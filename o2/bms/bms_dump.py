@@ -80,7 +80,7 @@ def main(argv):
         print bms.header 
 
     o = open(_output, 'w')
-    o.write(json.dumps(output))
+    o.write("var bms = " + json.dumps(output))
     o.close()
 
 if __name__ == '__main__':

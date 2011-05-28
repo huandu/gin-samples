@@ -21,11 +21,16 @@ $G('device', {
         audio.play();
 
         console.log(JSON.stringify(bms.frames));
+        initFrame = 150;
+        activeNotes = {}
+        for(var f in bms.frames) {
+            if (f <= initFrame) activeNotes[f] = bms.frames[f];
+        }
         this
         .data('keyLightHeight', 10)
         .data('singleNoteHeight', 6)
-        .data('activeNotes', {})
-        .data('frame', 0)
+        .data('activeNotes', activeNotes)
+        .data('frame', initFrame)
         .data('audio', audio)
         .data('colorDelta', 8);
     },
