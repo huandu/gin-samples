@@ -11,8 +11,8 @@
 <script type="text/javascript">
 
 $G('device', {
-    width: 400,
-    height: 400,
+    width: 600,
+    height: 600,
     fps: 32,
 }, {
     start: function() {
@@ -82,9 +82,12 @@ $G('device', {
           height = (frame - i)*5;
           if (height >= 0 && height + singleNoteHeight <= this.height()) {
             for(var p in activeNotes[i]) {
-              pos = (p-11)
-              if (pos >= 0 && pos < 7)
-              ctx.fillRect(blockWidth*pos, height, blockWidth, singleNoteHeight);
+              pos = (p-11);
+              if (pos >= 0 && pos < 7) {
+                color = ['#657383', '#00f', '#657383', '#000', '#657383', '#00f', '#657383'];
+                ctx.fillStyle   = color[pos];
+                ctx.fillRect(blockWidth*pos, height, blockWidth, singleNoteHeight);
+              }
             }
             newNotes[i] = activeNotes[i]
           }
