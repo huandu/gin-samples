@@ -5,7 +5,10 @@
 <title>Simple sample - gin samples</title>
 </head>
 <body>
-<div id="device" style="background: #111"></div>
+<div id="startPage" style="display:none">Welcome to Web O2!<br>
+    Press Enter To Start!
+</div>
+<div id="device" style="background: #111" ></div>
 <script type="text/javascript" src="gin.js"></script>
 <script type="text/javascript" src="back.js"></script>
 <script type="text/javascript">
@@ -32,16 +35,21 @@ $G('device', {
         .data('activeNotes', activeNotes)
         .data('frame', initFrame)
         .data('audio', audio)
-        .data('colorDelta', 8);
+        .data('colorDelta', 8)
+        .data('gameState',0);
     },
     render: function(e) {
+        
+     
         var keySettings = [0x53, 0x44, 0x46, 0x20, 0x4a, 0x4b, 0x4c]; //'d', 'f', 'g', ' ', 'j', 'k', 'l' 
         var ctx = e.context,
             audio = this.data('audio'),
             keyLightHeight = this.data('keyLightHeight'),
             singleNoteHeight = this.data('singleNoteHeight'),
             activeNotes = this.data('activeNotes'),
+            gameState = this.data('gameState'),
             frame = this.data('frame');
+
 
 //audio.pause();
 
@@ -50,6 +58,25 @@ $G('device', {
         
         ctx.save();
         ctx.clearRect(0, 0, this.width(), this.height());
+
+         if(gameState===0){
+            console.log("Game not stated");
+            ctx.fillStyle    = '#00F';
+            ctx.font         = 'bold 20px sans-serif';
+            ctx.textBaseline = 'top';
+            ctx.fillText  ('Welcome to Web O2! Press Enter To Start! ', 80, 200)
+
+            if(e.keyState[13]){
+                // show message to press enter.
+               // $("#startPage").hide();
+                document.getElementById('startPage').style.display="none";//"display:none";
+                var ctx = e.context;
+                gameState = 1;
+                console.log("Game start now");
+            } else {
+                return;
+            }
+        }
       
         blockSize = keySettings.length;
         blockWidth = this.width() / blockSize;
@@ -95,7 +122,8 @@ $G('device', {
         
         this
         .data('frame', (frame + 1) )
-        .data('activeNotes', newNotes )
+        .data('gameState', gameState )
+        .data('activeNotes', newNotes );
     }
 })
 ;
