@@ -11,9 +11,14 @@
 <script type="text/javascript">
 $G('device', {
     width: 400,
-    height: 400
+    height: 400,
+    fps: 32,
 }, {
     start: function() {
+        var audio = new Audio();
+        audio.src = 'back.mp3';
+        audio.play();
+
         this.data('rad', 2 * Math.random())
         .data('radDelta', -0.004)
         .data('color', 0)
@@ -22,11 +27,13 @@ $G('device', {
         .data('notesHeight',   [0, -20, -140, -180, -250, -260, -320])
         .data('notesPosition', [3, 6,   1,    5,    4,    2,    1])
         .data('deltaHeight', 0)
+        .data('audio', audio)
         .data('colorDelta', 8);
     },
     render: function(e) {
         var keySettings = [0x53, 0x44, 0x46, 0x20, 0x4a, 0x4b, 0x4c]; //'d', 'f', 'g', ' ', 'j', 'k', 'l' 
         var ctx = e.context,
+            audio = this.data('audio'),
             rad = this.data('rad'),
             radDelta = this.data('radDelta'),
             color = this.data('color'),
@@ -37,6 +44,11 @@ $G('device', {
             deltaHeight = this.data('deltaHeight'),
             colorDelta = this.data('colorDelta'),
             r = rad * Math.PI;
+
+//audio.pause();
+
+// audio.currentTime = 0;
+// audio.play();
         
         ctx.save();
         ctx.clearRect(0, 0, this.width(), this.height());
