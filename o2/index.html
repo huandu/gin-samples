@@ -22,7 +22,6 @@ $G('device', {
 
         console.log(JSON.stringify(bms.frames));
         this
-        .data('color', 0)
         .data('keyLightHeight', 10)
         .data('singleNoteHeight', 6)
         .data('activeNotes', {})
@@ -34,7 +33,6 @@ $G('device', {
         var keySettings = [0x53, 0x44, 0x46, 0x20, 0x4a, 0x4b, 0x4c]; //'d', 'f', 'g', ' ', 'j', 'k', 'l' 
         var ctx = e.context,
             audio = this.data('audio'),
-            color = this.data('color'),
             keyLightHeight = this.data('keyLightHeight'),
             singleNoteHeight = this.data('singleNoteHeight'),
             activeNotes = this.data('activeNotes'),
@@ -68,7 +66,7 @@ $G('device', {
         
         newNotes =  {}
         for (var i in activeNotes) {
-          height = (frame - i)*5;
+          height = (frame - i)*6.5;
           if (height >= 0 && height + singleNoteHeight <= this.height()) {
             for(var p in activeNotes[i]) {
               keyMap = {16:0,11:1,12:2,13:3,14:4,15:5,18:6};
@@ -91,7 +89,6 @@ $G('device', {
         ctx.restore();
         
         this
-        .data('color', color)
         .data('frame', (frame + 1) )
         .data('activeNotes', newNotes )
     }
