@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <title>Simple sample - gin samples</title>
 </head>
-<body>
+<body style="margin:0px; padding:0px;">
 <div id="startPage" style="display:none">Welcome to Web O2!<br>
     Press Enter To Start!
 </div>
@@ -78,12 +78,29 @@ $G('device', {
             }
         }
       
+         color = ['#C0C0C0', '#0000A0', '#C0C0C0', '#FF8040', '#C0C0C0', '#0000A0', '#C0C0C0'];
+         color_rgba = ['rgba(192, 192, 192, 0.5)', 'rgba(0, 0, 160, 0.5)', 'rgba(192, 192, 192, 0.5)', 'rgba(255, 128, 64, 0.5)', 'rgba(192, 192, 192, 0.5)', 'rgba(0, 0, 160, 0.5)', 'rgba(192, 192, 192, 0.5)'];
+
         blockSize = keySettings.length;
         blockWidth = this.width() / blockSize;
         for (var i=0; i<blockSize; i++) {
           keyCode = keySettings[i];
+
           if (e.keyState[keyCode]) {
-            ctx.fillRect(i*blockWidth, this.width() - keyLightHeight, blockWidth, keyLightHeight);
+                  var x1 = i * blockWidth,
+                      y1 = 300,
+                      x2 = (i + 1) * blockWidth,
+                      y2 = 600;
+                  // lynn
+                  var gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+                  gradient.addColorStop(0,'rgba(17, 17, 17, 0.5)');
+                  gradient.addColorStop(1, color_rgba[i]);
+                  ctx.fillStyle=gradient;
+
+                  //ctx.fillRect(i*blockWidth, this.width() - keyLightHeight, blockWidth, keyLightHeight);
+                  // lynn
+                  ctx.fillRect(x1, y1, blockWidth,300);
+                  // end lynn
           }
         }
         if (bms.frames[frame]) {
@@ -109,7 +126,6 @@ $G('device', {
                 continue;
               }
               if (pos >= 0 && pos < 7) {
-                color = ['#C0C0C0', '#0000A0', '#C0C0C0', '#FF8040', '#C0C0C0', '#0000A0', '#C0C0C0'];
                 ctx.fillStyle   = color[pos];
                 ctx.fillRect(blockWidth*pos, height, blockWidth, singleNoteHeight);
               }
