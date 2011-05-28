@@ -7,8 +7,9 @@
 <body>
 <div id="device"></div>
 <script type="text/javascript" src="gin.js"></script>
-<!--script type="text/javascript" src="../3rd-party/webgl-2d.js"></script-->
+<script type="text/javascript" src="back.js"></script>
 <script type="text/javascript">
+
 $G('device', {
     width: 400,
     height: 400,
@@ -19,14 +20,14 @@ $G('device', {
         audio.src = 'back.mp3';
         audio.play();
 
+        console.log(JSON.stringify(bms.frames));
         this.data('rad', 2 * Math.random())
         .data('radDelta', -0.004)
         .data('color', 0)
         .data('keyLightHeight', 10)
         .data('singleNoteHeight', 6)
-        .data('notesHeight',   [0, -20, -140, -180, -250, -260, -320])
-        .data('notesPosition', [3, 6,   1,    5,    4,    2,    1])
-        .data('deltaHeight', 0)
+        .data('activeNotes', {})
+        .data('frame', 0)
         .data('audio', audio)
         .data('colorDelta', 8);
     },
@@ -39,9 +40,8 @@ $G('device', {
             color = this.data('color'),
             keyLightHeight = this.data('keyLightHeight'),
             singleNoteHeight = this.data('singleNoteHeight'),
-            notesHeight = this.data('notesHeight'),
-            notesPosition = this.data('notesPosition'),
-            deltaHeight = this.data('deltaHeight'),
+            activeNotes = this.data('activeNotes'),
+            frame = this.data('frame'),
             colorDelta = this.data('colorDelta'),
             r = rad * Math.PI;
 
@@ -67,17 +67,26 @@ $G('device', {
             ctx.fillRect(i*blockWidth, this.width() - keyLightHeight, blockWidth, keyLightHeight);
           }
         }
-
+        if (bms.frames[frame]) {
+          activeNotes[frame] = bms.frames[frame]
+        }
         if (console) {
           var str = JSON.stringify(e.keyState);
           if (str != '{}')
           console.log(JSON.stringify(e.keyState));
+          if (activeNotes.length) console.log(JSON.stringify(activeNotes));
         }
-
-        for (var i=0; i<notesHeight.length; i++) {
-          height = notesHeight[i] + deltaHeight;
-          if (height > 0 && height + singleNoteHeight <= this.height()) {
-            ctx.fillRect(blockWidth*notesPosition[i], height, blockWidth, singleNoteHeight);
+        
+        newNotes =  {}
+        for (var i in activeNotes) {
+          height = (frame - i)*5;
+          if (height >= 0 && height + singleNoteHeight <= this.height()) {
+            for(var p in activeNotes[i]) {
+              pos = (p-11)
+              if (pos >= 0 && pos < 7)
+              ctx.fillRect(blockWidth*pos, height, blockWidth, singleNoteHeight);
+            }
+            newNotes[i] = activeNotes[i]
           }
         }
         ctx.stroke();
@@ -88,7 +97,8 @@ $G('device', {
         this.data('rad', rad)
         .data('radDelta', rad >= 2 || rad <= 0? -radDelta: radDelta)
         .data('color', color)
-        .data('deltaHeight', (deltaHeight + 5)%640)
+        .data('frame', (frame + 1) )
+        .data('activeNotes', newNotes )
         .data('colorDelta', color >= 200 || color <= 0? -colorDelta: colorDelta);
     }
 })

@@ -77,6 +77,7 @@ def main(argv):
     
     if _debug:
         print _fps
+        print bms.header 
 
     o = open(_output, 'w')
     o.write(json.dumps(output))

@@ -38,13 +38,13 @@ class BMS():
         self.header = header
         self.define = define
         self.body = body
-        self.re_cache = {}
+        self.re_header = {}
+        self.re_define = {}
 
         for i in self.header:
-            self.re_cache[i] = re.compile('^#' + i + ' (.*)', re.IGNORECASE)
+            self.re_header[i] = re.compile('^#' + i + ' (.*)', re.IGNORECASE)
         for i in self.define:
-            self.re_cache[i] = re.compile('^#' + i + '([0-9A-Z]{2}) (.*)', re.IGNORECASE)
-        self.re_cache['BODY'] = re.compile('^#([0-9]{3})([0-9A-Z]{2}):([0-9A-Z]*)', re.IGNORECASE)
+            self.re_define[i] = re.compile('^#' + i + '([0-9A-Z]{2}) (.*)', re.IGNORECASE)
     
     def __getitem__(self, key):
         """get header"""
@@ -56,17 +56,21 @@ class BMS():
     def parse_header(self, line):
         """parse bms header"""
         for i in self.header:
-            g = self.re_cache[i].match(line)
+            g = self.re_header[i].match(line)
             if g:
-                self[i] = g.group(1).strip()
+                self.header[i] = g.group(1).strip()
+                return
+
         for i in self.define:
-            g = self.re_cache[i].match(line)
+            g = self.re_define[i].match(line)
             if g:
                 self.define[i][g.group(1)] = g.group(2)
+                return
 
     def parse_body(self, line):
         """parse bms body"""
-        g = self.re_cache['BODY'].match(line)
+        re_body = re.compile('^#([0-9]{3})([0-9A-Z]{2}):([0-9A-Z]*)', re.IGNORECASE)
+        g = re_body.match(line)
         if g:
             if g.group(1) not in self.body:
                 self.body[g.group(1)] = {}
@@ -94,8 +98,6 @@ class BMS():
         header = body = False
         bms_header_markup = re.compile('^\*---------------------- HEADER FIELD')
         bms_body_markup = re.compile('\*---------------------- MAIN DATA FIELD')
-
-        re_cache = {}
 
         try:
             # gbk2utf8
