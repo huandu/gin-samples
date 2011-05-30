@@ -3,15 +3,108 @@
 <head>
 <meta charset="utf-8" />
 <title>Simple sample - gin samples</title>
+<style type="text/css">
+html {
+ height: 100%;
+}
+
+body {
+ overflow: hidden;
+ margin: 0;
+ height: 100%;
+ background-color: #000000;
+ font-family: Arial,sans-serif;
+}
+
+#gadgets {
+ display: none;
+}
+
+#stats {
+ position: absolute;
+ z-index: 100;
+ background-color: rgba(255, 255, 255, 0.2);
+ border: 2px solid #999999;
+ width: 155px;
+ -moz-border-radius: 8px;
+ border-radius: 8px;
+}
+
+#stats, #stats li {
+ margin: 0;
+ padding: 0;
+}
+
+#stats li {
+ list-style: none;
+ color: #FFFFFF;
+}
+
+#stats li span {
+ margin: 2px;
+ font-size: 12px;
+}
+
+#stats li span:first-child {
+ width: 90px;
+ display: inline-block;
+}
+
+#fps, #mps, #status {
+ font-weight: bold;
+}
+</style>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript" src="https://github.com/huandu/gin/raw/master/gin.js"></script>
+<script type="text/javascript" src="back.js"></script>
 </head>
 <body style="margin:0px; padding:0px;">
-<div id="startPage" style="display:none">Welcome to Web O2!<br>
-    Press Enter To Start!
-</div>
+
 <div id="device" style="background: #111" ></div>
-<script type="text/javascript" src="gin.js"></script>
-<script type="text/javascript" src="back.js"></script>
+<div id="gadgets">
+<ul id="stats">
+    <li><span>FPS</span><span id="fps">-</span></li>
+    <li><span>Mouse Move/s</span><span id="mps">-</span></li>
+    <li><span>Demo Status</span><span id="status">-</span></li>
+</ul>
+</div>
+
 <script type="text/javascript">
+    var STATUS_STOPPED = 0;
+    var STATUS_RUNNING = 1;
+    var STATUS_LOST_FOCUS = 2;
+    var statusMsg = [
+        'stopped', 'running', 'lost focus'
+    ];
+    
+    var stats = {
+        fps: 0,
+        mps: 0,
+        status: STATUS_STOPPED
+    };
+    var hasFocus = true;
+    
+    var _updateStats = function($stats, s) {
+        var fps = s('fps'),
+            mps = s('mps');
+        
+        if (fps != stats.fps) {
+            $('#fps', $stats).text(fps);
+            stats.fps = fps;
+        }
+        
+        if (mps != stats.mps) {
+            $('#mps', $stats).text(mps);
+            stats.mps = mps;
+        }
+        
+        var status = hasFocus? STATUS_RUNNING: STATUS_LOST_FOCUS;
+        
+        if (stats.status != status) {
+            $('#status', $stats).text(statusMsg[status]);
+            stats.status = status;
+        }
+    };
 
 $G('device', {
     width: 600,
@@ -28,6 +121,8 @@ $G('device', {
         for(var f in bms.frames) {
             if (f <= initFrame) activeNotes[f] = bms.frames[f];
         }
+        var $stats = $('#stats');
+
         this
         .data('keyLightHeight', 10)
         .data('singleNoteHeight', 6)
@@ -35,8 +130,20 @@ $G('device', {
         .data('frame', initFrame)
         .data('audio', audio)
         .data('colorDelta', 8)
-        .data('gameState',0);
+        .data('gameState',0)
+        .layer('status', {
+                left: 5,
+                top: 5,
+                playable: false,
+                data: {stats: $stats},
+                attachment: $stats.detach()[0]
+            }, {
+                beforerender: function(e) {
+                    _updateStats(this.data('stats'), e.stats, e.hasFocus);
+                }
+            });
     },
+
     render: function(e) {
      
         var keySettings = [0x53, 0x44, 0x46, 0x20, 0x4a, 0x4b, 0x4c]; //'d', 'f', 'g', ' ', 'j', 'k', 'l' 
@@ -66,8 +173,6 @@ $G('device', {
 
             if(e.keyState[13]){
                 // show message to press enter.
-               // $("#startPage").hide();
-                document.getElementById('startPage').style.display="none";//"display:none";
                 var ctx = e.context;
                 gameState = 1;
                 console.log("Game start now");
