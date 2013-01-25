@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Simple sample - gin samples</title>
+<style type="text/css">
+html {
+ height: 100%;
+}
+
+body {
+ overflow: hidden;
+ margin: 0;
+ height: 100%;
+ background-color: #000000;
+ font-family: Arial,sans-serif;
+}
+
+#gadgets {
+ display: none;
+}
+
+#stats {
+ position: absolute;
+ z-index: 100;
+ background-color: rgba(255, 255, 255, 0.2);
+ border: 2px solid #999999;
+ width: 155px;
+ -moz-border-radius: 8px;
+ border-radius: 8px;
+}
+
+#stats, #stats li {
+ margin: 0;
+ padding: 0;
+}
+
+#stats li {
+ list-style: none;
+ color: #FFFFFF;
+}
+
+#stats li span {
+ margin: 2px;
+ font-size: 12px;
+}
+
+#stats li span:first-child {
+ width: 90px;
+ display: inline-block;
+}
+
+#fps, #mps, #status {
+ font-weight: bold;
+}
+</style>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript" src="https://github.com/huandu/gin/raw/master/gin.js"></script>
+<script type="text/javascript" src="back.js"></script>
+</head>
+<body style="margin:0px; padding:0px;">
+
+<div id="device" style="background: #111" ></div>
+<div id="gadgets">
+<ul id="stats">
+    <li><span>FPS</span><span id="fps">-</span></li>
+    <li><span>Mouse Move/s</span><span id="mps">-</span></li>
+    <li><span>Demo Status</span><span id="status">-</span></li>
+</ul>
+</div>
+
+<script type="text/javascript">
+    var STATUS_STOPPED = 0;
+    var STATUS_RUNNING = 1;
+    var STATUS_LOST_FOCUS = 2;
+    var statusMsg = [
+        'stopped', 'running', 'lost focus'
+    ];
+    
+    var stats = {
+        fps: 0,
+        mps: 0,
+        status: STATUS_STOPPED
+    };
+    var hasFocus = true;
+    
+    var _updateStats = function($stats, s) {
+        var fps = s('fps'),
+            mps = s('mps');
+        
+        if (fps != stats.fps) {
+            $('#fps', $stats).text(fps);
+            stats.fps = fps;
+        }
+        
+        if (mps != stats.mps) {
+            $('#mps', $stats).text(mps);
+            stats.mps = mps;
+        }
+        
+        var status = hasFocus? STATUS_RUNNING: STATUS_LOST_FOCUS;
+        
+        if (stats.status != status) {
+            $('#status', $stats).text(statusMsg[status]);
+            stats.status = status;
+        }
+    };
+
+$G('device', {
+    width: 600,
+    height: 600,
+    fps: 32,
+}, {
+    start: function() {
+        var audio = new Audio();
+        audio.src = 'back.mp3';
+
+        // console.log(JSON.stringify(bms.frames));
+        
+        var $stats = $('#stats');
+        
+        this
+        .data('keyLightHeight', 10)
+        .data('singleNoteHeight', 6)
+        .data('audio', audio)
+        .data('colorDelta', 8)
+        .data('gameState',0)
+        .data('startTime',{})
+        .layer('status', {
+                left: 5,
+                top: 5,
+                playable: false,
+                data: {stats: $stats},
+                attachment: $stats.detach()[0]
+            }, {
+                beforerender: function(e) {
+                    _updateStats(this.data('stats'), e.stats, e.hasFocus);
+                }
+            });
+        bms.header.BPM /= 4.0;
+    },
+
+    render: function(e) {
+     
+        var keySettings = [0x53, 0x44, 0x46, 0x20, 0x4a, 0x4b, 0x4c]; //'d', 'f', 'g', ' ', 'j', 'k', 'l' 
+        var ctx = e.context,
+            audio = this.data('audio'),
+            keyLightHeight = this.data('keyLightHeight'),
+            singleNoteHeight = this.data('singleNoteHeight'),
+            gameState = this.data('gameState'),
+            startTime = this.data('startTime');
+
+        var currentDate = new Date() 
+        var currentTime = currentDate.getTime();
+
+//audio.pause();
+
+// audio.currentTime = 0;
+// audio.play();
+        
+        ctx.save();
+        ctx.clearRect(0, 0, this.width(), this.height());
+
+         if(gameState===0){
+            ctx.fillStyle    = '#00F';
+            ctx.font         = 'bold 20px sans-serif';
+            ctx.textBaseline = 'top';
+            ctx.fillText  ("Welcome to Web O2!\n Press Enter To Start!", 80, 200);
+
+            if(e.keyState[13]){
+                // show message to press enter.
+                var ctx = e.context;
+                gameState = 1;
+                console.log("Game start now");
+                startTime = currentTime;
+                this.data('startTime', startTime);
+                audio.play();
+            } else {
+                return;
+            }
+        }
+      
+        color = ['#C0C0C0', '#0000A0', '#C0C0C0', '#FF8040', '#C0C0C0', '#0000A0', '#C0C0C0'];
+        color_rgba = ['rgba(192, 192, 192, 0.5)', 'rgba(0, 0, 160, 0.5)', 'rgba(192, 192, 192, 0.5)', 'rgba(255, 128, 64, 0.5)', 'rgba(192, 192, 192, 0.5)', 'rgba(0, 0, 160, 0.5)', 'rgba(192, 192, 192, 0.5)'];
+
+        blockSize = keySettings.length;
+        blockWidth = this.width() / blockSize;
+        for (var i=0; i<blockSize; i++) {
+          keyCode = keySettings[i];
+
+          if (e.keyState[keyCode]) {
+                  var x1 = i * blockWidth,
+                      y1 = this.height() / 2,
+                      x2 = (i + 1) * blockWidth,
+                      y2 = this.height();
+
+                  var gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+                  gradient.addColorStop(0,'rgba(17, 17, 17, 0.5)');
+                  gradient.addColorStop(1, color_rgba[i]);
+                  ctx.fillStyle=gradient;
+
+                  //ctx.fillRect(i*blockWidth, this.width() - keyLightHeight, blockWidth, keyLightHeight);
+                  ctx.fillRect(x1, y1, blockWidth,300);
+          }
+        }
+        
+        beatPerScreen = 1;
+        var sec = currentTime - startTime;
+        fromBeat = (sec * bms.header.BPM ) / (60 * 1000);
+        toBeat = fromBeat + beatPerScreen;
+        if (sec%10 == 0) {
+           console.log("time " + sec + " from " + fromBeat + " to " + toBeat);
+        }
+        for (var i in bms.frames) {
+          if (i > toBeat) continue;
+          if (i < fromBeat - 1) continue;
+          
+          baseHeight = this.height() * ((i - fromBeat) / beatPerScreen);
+          beat = bms.frames[i];
+          // if (console) { console.log(i); }
+          for(var offset in beat) {
+              height = baseHeight + this.height() * offset / (beatPerScreen * bms.header.DIVIDE);
+              if (height > this.height()) continue;
+
+              // console.log(JSON.stringify(beat[offset]));
+              keyMap = {16:0,11:1,12:2,13:3,14:4,15:5,18:6};
+              for (var ch in beat[offset]) {
+                  if (keyMap[ch] == null) continue;
+                  pos = keyMap[ch];
+                  ctx.fillStyle = color[pos];
+                  ctx.fillRect(blockWidth*pos, this.height() - height, blockWidth, singleNoteHeight);
+              }
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+        
+        this
+        .data('gameState', gameState )
+    }
+})
+;
+
+</script>
+</body>
+</html>
