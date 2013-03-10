@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Simple sample - down floor</title>
+</head>
+<body>
+<div id="device"></div>
+
+<script type="text/javascript" src="gin.js"></script>
+<script type="text/javascript">
+
+$G('device', {
+	width: 400,
+	height: 400
+}, {
+	start: function() {
+		var m = {
+			w: 400,
+			h: 400,
+			x: 80,
+			y: 0,
+			oy: 100,
+			r: 10,
+			t: 0,
+			jumph: 30,
+			dt: 0,
+			over: false,
+		};
+		m.floor = [];
+		var fw = 100;
+		for (var y = 50; y < 400; y += 50) {
+			m.floor.push({
+				x: Math.random()*(m.w-fw),
+				y: y,
+				w: fw,
+				h: 10,
+			});
+		}
+		m.stat = 'hori';
+		m.at = m.floor[4];
+		m.x = m.at.x + 20;
+		m.y = m.at.y - m.r;
+		this.data('m', m);
+	},
+
+	render: function(e) {
+		var ctx = e.context;
+		var m = this.data('m');
+		if (m.over)
+			return;
+
+		var mul = function (v1,v2) {
+			return v1.x*v2.y-v1.y*v2.x;
+		};
+		var linecross = function (p1,p2,p3,p4) {
+			var v1 = {x:p1.x-p3.x,y:p1.y-p3.y},
+					v2 = {x:p2.x-p3.x,y:p2.y-p3.y},
+					v3 = {x:p4.x-p3.x,y:p4.y-p3.y},
+					v = mul(v1,v3)*mul(v2,v3)
+						v1={x:p3.x-p1.x,y:p3.y-p1.y}
+			v2={x:p4.x-p1.x,y:p4.y-p1.y}
+			v3={x:p2.x-p1.x,y:p2.y-p1.y}
+			return (v<=0&&mul(v1,v3)*mul(v2,v3)<=0)?true:false
+		};
+
+		var cross = function (f) {
+			return linecross(
+				{x:f.x, y:f.y},
+				{x:f.x+f.w, y:f.y},
+				{x:m.lx, y:m.ly},
+				{x:m.x, y:m.y}
+				);
+		};
+
+		if (m.y - m.r < 0 || m.y + m.r > m.h) {
+			alert('game over');
+			m.over = true;
+		}
+
+		m.lx = m.x;
+		m.ly = m.y;
+
+		if (e.keyState[37]) {
+			m.x -= 5;
+		}
+		if (e.keyState[39]) {
+			m.x += 5;
+		}
+		if (e.keyState[32] && m.stat == 'hori') {
+			m.stat = 'jump';
+			m.dt = Math.sqrt(m.jumph);
+			m.oy = m.y - m.jumph;
+			m.t = 0;
+		}
+		if (m.stat == 'jump') {
+			m.t += 0.6;
+			m.y = m.oy + (m.t-m.dt)*(m.t-m.dt);
+		}
+
+		for (var i in m.floor) {
+			var f = m.floor[i];
+			f.y--;
+			if (f.y < 0) {
+				f.y = m.h;
+			}
+		}
+
+		if (m.stat == 'jump') {
+			for (var i in m.floor) {
+				var f = m.floor[i];
+				if (cross(f)) {
+					m.stat = 'hori';
+					m.y = f.y-m.r;
+					m.at = f;
+				}
+			}
+		}
+
+		if (m.stat == 'hori') {
+			if (m.x < m.at.x || m.x > m.at.x+m.at.w) {
+				m.stat = 'jump';
+				m.t = 0;
+				m.dt = 0;
+				m.oy = m.y;
+			} else {
+				m.y = m.at.y-m.r;
+			}
+		}
+
+		ctx.save();
+		ctx.clearRect(0, 0, this.width(), this.height());
+
+		ctx.beginPath();
+		ctx.moveTo(0, 0);
+		ctx.lineTo(m.w, 0);
+		ctx.lineTo(m.w, m.h);
+		ctx.lineTo(0, m.h);
+		ctx.stroke();
+
+		for (var i in m.floor) {
+			var f = m.floor[i];
+			ctx.beginPath();
+			ctx.moveTo(f.x, f.y);
+			ctx.lineTo(f.x+f.w, f.y);
+			ctx.lineTo(f.x+f.w, f.y+f.h);
+			ctx.lineTo(f.x, f.y+f.h);
+			ctx.fill();
+		}
+
+		ctx.beginPath();
+		ctx.fillStyle = 'rgb(255,0,0)';
+		ctx.arc(m.x, m.y, m.r, 0, 2 * Math.PI, false);
+		ctx.fill();
+
+		ctx.restore();
+	}
+})
+// use webgl-2d to boost performance
+.extend({
+	getContext: function(canvas) {
+			return canvas.getContext('2d');
+	}
+});
+
+</script>
+</body>
+</html>
